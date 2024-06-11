@@ -96,7 +96,7 @@ class Validator:
         seen_cid0 = False
         if self.validate_key("prompt_order", list):
             for order in self.obj["prompt_order"]:
-                if Validator.is_valid_prompt_order(order)
+                if Validator.is_valid_prompt_order(order):
                     and order["character_id"] == "0"
                     and all(lambda o: o["identifier"] in known_prompt_ids for o in order["order"]):
                     seen_cid0 = True

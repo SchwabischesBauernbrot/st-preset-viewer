@@ -130,20 +130,25 @@ def load_from_file(path):
         try:
             obj = json.load(f)
         except Exception:
+            raise gr.Error("File is not valid JSON")
             return None, True
     if not Validator.is_valid_preset(obj):
+        raise gr.Error("File is not a valid preset")
         return None, True
     return gr.update(selected=1), obj, False
 
 def load_from_url(url):
     resp = requests.get(url)
     if not resp.ok:
+        raise gr.Error("Failed to load URL")
         return None, True
     try:
         obj = json.loads(resp.text)
     except Exception:
+        raise gr.Error("URL is not valid JSON")
         return None, True
     if not Validator.is_valid_preset(obj):
+        raise gr.Error("URL is not a valid preset")
         return None, True
     return gr.update(selected=1), obj, False
 

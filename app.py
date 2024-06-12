@@ -133,7 +133,7 @@ def load_from_file(path):
             return None, True
     if not Validator.is_valid_preset(obj):
         return None, True
-    return obj, False
+    return gr.update(selected=1), obj, False
 
 def load_from_url(url):
     resp = requests.get(url)
@@ -145,7 +145,7 @@ def load_from_url(url):
         return None, True
     if not Validator.is_valid_preset(obj):
         return None, True
-    return obj, False
+    return gr.update(selected=1), obj, False
 
 with gr.Blocks() as demo:
     preset_error = gr.State(False)
@@ -156,9 +156,9 @@ with gr.Blocks() as demo:
     with gr.Tabs() as tabs:
         with gr.TabItem("Upload", id=0):
             file = gr.File(label="Upload a preset (.json)", file_types=[".json"])
-            file.upload(fn=load_from_file, inputs=[file], outputs=[preset, preset_error])
+            file.upload(fn=load_from_file, inputs=[file], outputs=[tabs, preset, preset_error])
             url_input = gr.Textbox(label="Enter a URL to a preset (.json) - press Enter to submit")
-            url_input.submit(fn=load_from_url, inputs=[url_input], outputs=[preset, preset_error])
+            url_input.submit(fn=load_from_url, inputs=[url_input], outputs=[tabs, preset, preset_error])
         with gr.TabItem("Viewer", id=1):
             @gr.render(inputs=[preset_error, preset])
             def render_preset(preset_error, preset):

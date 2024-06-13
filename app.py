@@ -163,6 +163,8 @@ class Validator:
         return v.valid
 
 def maybe_convert_to_original_format(obj):
+    if isinstance(obj.get("top_p"), str):
+        obj["top_p"] = float(obj["top_p"])
     if obj.get("version") != 1:
         return obj, False
     # Synthesize a traditional preset

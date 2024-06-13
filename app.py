@@ -155,7 +155,7 @@ def load_from_url(url):
 def render_prompt(prompt, enabled=True):
     with gr.Accordion(prompt["name"] + ("" if enabled else " (DISABLED)")):
         if prompt.get("marker"):
-            gr.Markdown(f"This is a marker ({order['identifier'})")
+            gr.Markdown(f"This is a marker ({order['identifier']})")
         else:
             gr.Markdown(f"Role: {prompt['role'] or 'system'}")
             if "injection_position" in prompt and prompt["injection_position"] == 1 and "injection_depth" in prompt:

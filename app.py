@@ -108,8 +108,8 @@ class Validator:
             for order in self.obj["prompt_order"]:
                 if Validator.is_valid_prompt_order(order) and order["character_id"] == 100001 and all(lambda o: o["identifier"] in known_prompt_ids for o in order["order"]):
                     seen_cid0 = True
-            if Validator.is_valid_prompt_order_list(self.obj["prompt_order"]) and all(lambda o: o["identifier"] in known_prompt_ids for o in self.obj["prompt_order"]):
-                seen_cid0 = True
+            # if Validator.is_valid_prompt_order_list(self.obj["prompt_order"]) and all(lambda o: o["identifier"] in known_prompt_ids for o in self.obj["prompt_order"]):
+            #     seen_cid0 = True
         if not seen_cid0:
             self.valid = False
 
@@ -143,6 +143,37 @@ class Validator:
         v.validate_ordering()
         return v.valid
 
+def maybe_convert_to_original_format(obj):
+    if obj.get("version") != 1:
+        return obj, False
+    # Synthesize a traditional preset
+    builtin_prompts = [{
+        "name": x[0],
+        "identifier": x[1],
+        "system_prompt": True,
+        "marker": True,
+    } for x in [
+        ("Chat Examples", "dialogueExamples"),
+        ("Chat History", "chatHistory"),
+        ("World Info (after)", "worldInfoAfter"),
+        ("World Info (before)", "worldInfoBefore"),
+        ("Enhance Definitions", "enhanceDefinitions"),
+        ("Char Description", "charDescription"),
+        ("Char Personality", "charPersonality"),
+        ("Scenario", "scenario"),
+        ("Persona Description", "personaDescription"),
+        ("JB", "jailbreak"),
+    ]]
+    return {
+        "prompts": obj["data"]["prompts"] + builtin_prompts
+        "prompt_order": [{
+            "character_id": 100001,
+            "order": obj["data"]["prompt_order"],
+        }]
+    }, True
+
+CONVERT_MESSAGE = "This preset was converted from version 1 to the traditional format, there may be inconsistencies."
+
 def load_from_file(path):
     with open(path, "r") as f:
         try:
@@ -150,10 +181,11 @@ def load_from_file(path):
         except Exception:
             raise gr.Error("File is not valid JSON")
             return None, True
+    obj, modified = maybe_convert_to_original_format(obj)
     if not Validator.is_valid_preset(obj):
         raise gr.Error("File is not a valid preset")
         return None, True
-    return gr.update(selected=1), obj, False
+    return gr.update(selected=1), obj, CONVERT_MESSAGE if modified else None
 
 def load_from_url(url):
     resp = requests.get(url)
@@ -165,10 +197,11 @@ def load_from_url(url):
     except Exception:
         raise gr.Error("URL is not valid JSON")
         return None, True
+    obj, modified = maybe_convert_to_original_format(obj)
     if not Validator.is_valid_preset(obj):
         raise gr.Error("URL is not a valid preset")
         return None, True
-    return gr.update(selected=1), obj, False
+    return gr.update(selected=1), obj, CONVERT_MESSAGE if modified else None
 
 def render_prompt(prompt, enabled=True):
     with gr.Accordion(prompt["name"] + ("" if enabled else " (DISABLED)"), open=enabled or prompt.get("marker", False)):
@@ -181,20 +214,21 @@ def render_prompt(prompt, enabled=True):
             gr.Code(prompt["content"], container=False)
 
 with gr.Blocks() as demo:
-    preset_error = gr.State(False)
+    # preset_error = gr.State(False)
     preset = gr.State(None)
+    load_extra = gr.State(None)
     
     gr.Markdown("# SillyTavern preset viewer")
 
     with gr.Tabs() as tabs:
         with gr.TabItem("Upload", id=0):
             file = gr.File(label="Upload a preset (.json)", file_types=[".json"])
-            file.upload(fn=load_from_file, inputs=[file], outputs=[tabs, preset, preset_error])
+            file.upload(fn=load_from_file, inputs=[file], outputs=[tabs, preset, load_extra])
             url_input = gr.Textbox(label="Enter a URL to a preset (.json) - press Enter to submit")
-            url_input.submit(fn=load_from_url, inputs=[url_input], outputs=[tabs, preset, preset_error])
+            url_input.submit(fn=load_from_url, inputs=[url_input], outputs=[tabs, preset, load_extra])
         with gr.TabItem("Viewer", id=1):
-            @gr.render(inputs=[preset_error, preset])
-            def render_preset(preset_error, preset):
+            @gr.render(inputs=[preset_error, preset, load_extra])
+            def render_preset(preset_error, preset, load_extra):
                 if preset_error:
                     gr.Markdown("Error loading preset")
                     return
@@ -202,12 +236,15 @@ with gr.Blocks() as demo:
                     gr.Markdown("No preset loaded, enter a URL or upload a file")
                 else:
                     gr.Markdown("Preset loaded and validated")
+                    if load_extra is not None:
+                        gr.Markdown(load_extra)
                     prompt_map = {p["identifier"]: p for p in preset["prompts"]}
                     gr.Markdown("# Preset")
                     for order in (next(o for o in preset["prompt_order"] if o["character_id"] == 100001)["order"] if isinstance(preset["prompt_order"], list) else preset["prompt_order"]):
                         prompt = prompt_map[order["identifier"]]
                         render_prompt(prompt, order["enabled"])
-                    with gr.Accordion("# All prompts", open=False):
+                    gr.Markdown("# All prompts")
+                    with gr.Accordion("All prompts", open=False):
                         for prompt in prompt_map.values():
                             render_prompt(prompt)
 

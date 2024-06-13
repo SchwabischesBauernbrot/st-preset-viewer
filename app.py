@@ -54,7 +54,7 @@ class Validator:
                 self.valid = False
 
     def validate_prompt_order_list(self):
-        for s in self.obj["order"]:
+        for s in self.obj:
             if not Validator.is_valid_ordering(s):
                 self.valid = False
 
@@ -108,9 +108,8 @@ class Validator:
         elif self.validate_key("prompt_order", dict):
             if not Validator.is_valid_prompt_order_list(self.obj["prompt_order"]):
                 self.valid = False
-            else:
-                if all(lambda o: o["identifier"] in known_prompt_ids for o in self.obj["prompt_order"]):
-                    seen_cid0 = True
+            elif all(lambda o: o["identifier"] in known_prompt_ids for o in self.obj["prompt_order"]):
+                seen_cid0 = True
         if not seen_cid0:
             self.valid = False
 

@@ -241,7 +241,7 @@ with gr.Blocks() as demo:
                         gr.Markdown(load_extra)
                     prompt_map = {p["identifier"]: p for p in builtin_prompts+preset["prompts"]}
                     gr.Markdown("# Preset")
-                    for order in (next(o for o in preset["prompt_order"] if o["character_id"] == 100001)["order"] if isinstance(preset["prompt_order"], list) else preset["prompt_order"]):
+                    for order in next(o for o in preset["prompt_order"] if o["character_id"] == 100001)["order"]:
                         prompt = prompt_map[order["identifier"]]
                         render_prompt(prompt, order["enabled"])
                     gr.Markdown("# All prompts")

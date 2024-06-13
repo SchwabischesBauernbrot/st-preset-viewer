@@ -165,7 +165,7 @@ def maybe_convert_to_original_format(obj):
         ("JB", "jailbreak"),
     ]]
     return {
-        "prompts": obj["data"]["prompts"] + builtin_prompts
+        "prompts": obj["data"]["prompts"] + builtin_prompts,
         "prompt_order": [{
             "character_id": 100001,
             "order": obj["data"]["prompt_order"],

@@ -19,7 +19,8 @@ class Validator:
     
     def validate_key(self, key, ty):
         r = self.try_validate_key(key, ty)
-        self.valid = r
+        if not r:
+            self.valid = False
         return r
     
     def validate_key_if_present(self, key, ty):
@@ -101,15 +102,16 @@ class Validator:
                     continue
                 known_prompt_ids.add(prompt["identifier"])
         seen_cid0 = False
-        if self.try_validate_key("prompt_order", list):
-            for order in self.obj["prompt_order"]:
-                if Validator.is_valid_prompt_order(order) and order["character_id"] == "100000" and all(lambda o: o["identifier"] in known_prompt_ids for o in order["order"]):
+        if self.validate_key("prompt_order", list) and len(self.obj["prompt_order"]) > 0 and isinstance(self.obj["prompt_order"][0], dict):
+            if "character_id" in self.obj["prompt_order"][0]:
+                for order in self.obj["prompt_order"]:
+                    if Validator.is_valid_prompt_order(order) and order["character_id"] == "100000" and all(lambda o: o["identifier"] in known_prompt_ids for o in order["order"]):
+                        seen_cid0 = True
+            else:
+                if not Validator.is_valid_prompt_order_list(self.obj["prompt_order"]):
+                    self.valid = False
+                elif all(lambda o: o["identifier"] in known_prompt_ids for o in self.obj["prompt_order"]):
                     seen_cid0 = True
-        elif self.validate_key("prompt_order", dict):
-            if not Validator.is_valid_prompt_order_list(self.obj["prompt_order"]):
-                self.valid = False
-            elif all(lambda o: o["identifier"] in known_prompt_ids for o in self.obj["prompt_order"]):
-                seen_cid0 = True
         if not seen_cid0:
             self.valid = False
 

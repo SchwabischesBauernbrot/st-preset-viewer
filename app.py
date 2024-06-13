@@ -29,12 +29,12 @@ class Validator:
 
     def validate_prompt(self):
         self.validate_key("identifier", bool)
+        self.validate_key("name", str)
         self.validate_keys_if_present([
             "injection_position",
             "injection_depth",
         ], int)
         self.validate_keys_if_present([
-            "name",
             "role",
             "content",
         ], str)
@@ -152,6 +152,16 @@ def load_from_url(url):
         return None, True
     return gr.update(selected=1), obj, False
 
+def render_prompt(prompt, enabled=True):
+    with gr.Accordion(prompt["name"] + ("" if enabled else " (DISABLED)")):
+        if prompt.get("marker"):
+            gr.Markdown(f"This is a marker ({order['identifier'})")
+        else:
+            gr.Markdown(f"Role: {prompt['role'] or 'system'}")
+            if "injection_position" in prompt and prompt["injection_position"] == 1 and "injection_depth" in prompt:
+                gr.Markdown(f"Injection depth: {prompt['injection_depth']} (absolute)")
+            gr.Code(prompt["content"])
+
 with gr.Blocks() as demo:
     preset_error = gr.State(False)
     preset = gr.State(None)
@@ -174,6 +184,14 @@ with gr.Blocks() as demo:
                     gr.Markdown("No preset loaded, enter a URL or upload a file")
                 else:
                     gr.Markdown("Preset loaded and validated")
-                    gr.Json(preset)
+                    prompt_map = {p["identifier"]: p for p in preset["prompts"]}
+                    gr.Markdown("# Preset")
+                    for order in next(o for o in preset["prompt_order"] if o["character_id"] == 0)["order"]:
+                        prompt = prompt_map[order["identifier"]]
+                        render_prompt(prompt, order["enabled"])
+                    with gr.Accordion("# All prompts"):
+                        for prompt in prompt_map.values():
+                            render_prompt(prompt)
+                        
     
 demo.launch()

@@ -186,7 +186,7 @@ with gr.Blocks() as demo:
                     gr.Markdown("Preset loaded and validated")
                     prompt_map = {p["identifier"]: p for p in preset["prompts"]}
                     gr.Markdown("# Preset")
-                    for order in next(o for o in preset["prompt_order"] if o["character_id"] == 0)["order"]:
+                    for order in next(o for o in preset["prompt_order"] if o["character_id"] == "0")["order"]:
                         prompt = prompt_map[order["identifier"]]
                         render_prompt(prompt, order["enabled"])
                     with gr.Accordion("# All prompts"):

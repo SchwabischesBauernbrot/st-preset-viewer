@@ -17,6 +17,7 @@ builtin_pairs = [
     ("NSFW", "nsfw"),
     ("Main Prompt", "main"),
 ]
+builtin_prompt_ids = [x[1] for x in builtin_pairs]
 builtin_prompts = [{
     "name": x[0],
     "identifier": x[1],
@@ -117,7 +118,7 @@ class Validator:
             "repetition_penalty",
         ], Real)
         self.validate_key_if_present("names_behavior", int)
-        known_prompt_ids = set(x[1] for x in builtin_pairs)
+        known_prompt_ids = set(builtin_prompt_ids)
         if self.validate_key("prompts", list):
             for prompt in self.obj["prompts"]:
                 if not Validator.is_valid_prompt(prompt):
@@ -212,7 +213,10 @@ def render_prompt(prompt, enabled=True):
             gr.Markdown(f"Role: {prompt['role'] or 'system'}")
             if "injection_position" in prompt and prompt["injection_position"] == 1 and "injection_depth" in prompt:
                 gr.Markdown(f"Injection depth: {prompt['injection_depth']} (absolute)")
-            gr.Code(prompt["content"], container=False)
+            if prompt["identifier"] in builtin_prompt_ids:
+                gr.Markdown(f"This is a system prompt ({prompt['identifier'})")
+            if prompt["content"].strip():
+                gr.Code(prompt["content"], container=False, interactive=False)
 
 with gr.Blocks() as demo:
     preset = gr.State(None)

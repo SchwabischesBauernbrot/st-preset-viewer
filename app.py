@@ -227,11 +227,8 @@ with gr.Blocks() as demo:
             url_input = gr.Textbox(label="Enter a URL to a preset (.json) - press Enter to submit")
             url_input.submit(fn=load_from_url, inputs=[url_input], outputs=[tabs, preset, load_extra])
         with gr.TabItem("Viewer", id=1):
-            @gr.render(inputs=[preset_error, preset, load_extra])
-            def render_preset(preset_error, preset, load_extra):
-                if preset_error:
-                    gr.Markdown("Error loading preset")
-                    return
+            @gr.render(inputs=[preset, load_extra])
+            def render_preset(preset, load_extra):
                 if preset is None:
                     gr.Markdown("No preset loaded, enter a URL or upload a file")
                 else:

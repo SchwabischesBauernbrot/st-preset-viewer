@@ -3,6 +3,25 @@ import requests
 import json
 from numbers import Real
 
+builtin_pairs = [
+    ("Chat Examples", "dialogueExamples"),
+    ("Chat History", "chatHistory"),
+    ("World Info (after)", "worldInfoAfter"),
+    ("World Info (before)", "worldInfoBefore"),
+    ("Enhance Definitions", "enhanceDefinitions"),
+    ("Char Description", "charDescription"),
+    ("Char Personality", "charPersonality"),
+    ("Scenario", "scenario"),
+    ("Persona Description", "personaDescription"),
+    ("JB", "jailbreak"),
+    ("NSFW", "nsfw"),
+]
+builtin_prompts = [{
+    "name": x[0],
+    "identifier": x[1],
+    "system_prompt": True,
+    "marker": True,
+} for x in builtin_pairs]
 
 # Not meant to 100% validate a preset. Just enough that the code
 # that renders it won't crash trying to access an invalid key.
@@ -97,7 +116,7 @@ class Validator:
             "repetition_penalty",
         ], Real)
         self.validate_key_if_present("names_behavior", int)
-        known_prompt_ids = set()
+        known_prompt_ids = set(x[1] for x in builtin_pairs)
         if self.validate_key("prompts", list):
             for prompt in self.obj["prompts"]:
                 if not Validator.is_valid_prompt(prompt):
@@ -106,7 +125,7 @@ class Validator:
         seen_cid0 = False
         if self.validate_key("prompt_order", list) and len(self.obj["prompt_order"]) > 0 and isinstance(self.obj["prompt_order"][0], dict):
             for order in self.obj["prompt_order"]:
-                if Validator.is_valid_prompt_order(order) and order["character_id"] == 100001 and all(lambda o: o["identifier"] in known_prompt_ids for o in order["order"]):
+                if Validator.is_valid_prompt_order(order) and order["character_id"] == 100001 and all(o["identifier"] in known_prompt_ids for o in order["order"]):
                     seen_cid0 = True
             # if Validator.is_valid_prompt_order_list(self.obj["prompt_order"]) and all(lambda o: o["identifier"] in known_prompt_ids for o in self.obj["prompt_order"]):
             #     seen_cid0 = True
@@ -147,23 +166,6 @@ def maybe_convert_to_original_format(obj):
     if obj.get("version") != 1:
         return obj, False
     # Synthesize a traditional preset
-    builtin_prompts = [{
-        "name": x[0],
-        "identifier": x[1],
-        "system_prompt": True,
-        "marker": True,
-    } for x in [
-        ("Chat Examples", "dialogueExamples"),
-        ("Chat History", "chatHistory"),
-        ("World Info (after)", "worldInfoAfter"),
-        ("World Info (before)", "worldInfoBefore"),
-        ("Enhance Definitions", "enhanceDefinitions"),
-        ("Char Description", "charDescription"),
-        ("Char Personality", "charPersonality"),
-        ("Scenario", "scenario"),
-        ("Persona Description", "personaDescription"),
-        ("JB", "jailbreak"),
-    ]]
     return {
         "prompts": obj["data"]["prompts"] + builtin_prompts,
         "prompt_order": [{
@@ -235,7 +237,8 @@ with gr.Blocks() as demo:
                     gr.Markdown("Preset loaded and validated")
                     if load_extra is not None:
                         gr.Markdown(load_extra)
-                    prompt_map = {p["identifier"]: p for p in preset["prompts"]}
+                    prompt_map = builtin_prompts.copy()
+                    prompt_map.update({p["identifier"]: p for p in preset["prompts"]})
                     gr.Markdown("# Preset")
                     for order in (next(o for o in preset["prompt_order"] if o["character_id"] == 100001)["order"] if isinstance(preset["prompt_order"], list) else preset["prompt_order"]):
                         prompt = prompt_map[order["identifier"]]

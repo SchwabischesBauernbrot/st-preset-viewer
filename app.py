@@ -96,7 +96,7 @@ class Validator:
         seen_cid0 = False
         if self.validate_key("prompt_order", list):
             for order in self.obj["prompt_order"]:
-                if Validator.is_valid_prompt_order(order) and order["character_id"] == "0" and all(lambda o: o["identifier"] in known_prompt_ids for o in order["order"]):
+                if Validator.is_valid_prompt_order(order) and order["character_id"] == "100000" and all(lambda o: o["identifier"] in known_prompt_ids for o in order["order"]):
                     seen_cid0 = True
         if not seen_cid0:
             self.valid = False
@@ -153,14 +153,14 @@ def load_from_url(url):
     return gr.update(selected=1), obj, False
 
 def render_prompt(prompt, enabled=True):
-    with gr.Accordion(prompt["name"] + ("" if enabled else " (DISABLED)")):
+    with gr.Accordion(prompt["name"] + ("" if enabled else " (DISABLED)"), open=enabled):
         if prompt.get("marker"):
             gr.Markdown(f"This is a marker ({prompt['identifier']})")
         else:
             gr.Markdown(f"Role: {prompt['role'] or 'system'}")
             if "injection_position" in prompt and prompt["injection_position"] == 1 and "injection_depth" in prompt:
                 gr.Markdown(f"Injection depth: {prompt['injection_depth']} (absolute)")
-            gr.Code(prompt["content"])
+            gr.Code(prompt["content"], container=False)
 
 with gr.Blocks() as demo:
     preset_error = gr.State(False)
@@ -186,12 +186,12 @@ with gr.Blocks() as demo:
                     gr.Markdown("Preset loaded and validated")
                     prompt_map = {p["identifier"]: p for p in preset["prompts"]}
                     gr.Markdown("# Preset")
-                    for order in next(o for o in preset["prompt_order"] if o["character_id"] == "0")["order"]:
+                    for order in next(o for o in preset["prompt_order"] if o["character_id"] == "100000")["order"]:
                         prompt = prompt_map[order["identifier"]]
                         render_prompt(prompt, order["enabled"])
-                    with gr.Accordion("# All prompts"):
+                    with gr.Accordion("# All prompts", open=False):
                         for prompt in prompt_map.values():
                             render_prompt(prompt)
-                        
+
     
 demo.launch()

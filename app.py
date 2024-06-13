@@ -153,8 +153,8 @@ def load_from_url(url):
     return gr.update(selected=1), obj, False
 
 def render_prompt(prompt, enabled=True):
-    with gr.Accordion(prompt["name"] + ("" if enabled else " (DISABLED)"), open=enabled):
-        if prompt.get("marker"):
+    with gr.Accordion(prompt["name"] + ("" if enabled else " (DISABLED)"), open=enabled or prompt.get("marker", False)):
+        if prompt.get("marker", False):
             gr.Markdown(f"This is a marker ({prompt['identifier']})")
         else:
             gr.Markdown(f"Role: {prompt['role'] or 'system'}")

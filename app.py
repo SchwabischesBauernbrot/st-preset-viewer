@@ -3,6 +3,7 @@ import requests
 import json
 from numbers import Real
 
+
 # Not meant to 100% validate a preset. Just enough that the code
 # that renders it won't crash trying to access an invalid key.
 class Validator:
@@ -49,7 +50,8 @@ class Validator:
         ], bool)
 
     def validate_prompt_order(self):
-        self.validate_key("character_id", str)
+        if not self.try_validate_key("character_id", str):
+            self.validate_key("character_id", int)
         if self.validate_key("order", list):
             if not Validator.is_valid_prompt_order_list(self.obj["order"]):
                 self.valid = False

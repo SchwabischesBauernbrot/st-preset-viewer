@@ -239,8 +239,7 @@ with gr.Blocks() as demo:
                     gr.Markdown("Preset loaded and validated")
                     if load_extra is not None:
                         gr.Markdown(load_extra)
-                    prompt_map = builtin_prompts.copy()
-                    prompt_map.update({p["identifier"]: p for p in preset["prompts"]})
+                    prompt_map = {p["identifier"]: p for p in builtin_prompts+preset["prompts"]}
                     gr.Markdown("# Preset")
                     for order in (next(o for o in preset["prompt_order"] if o["character_id"] == 100001)["order"] if isinstance(preset["prompt_order"], list) else preset["prompt_order"]):
                         prompt = prompt_map[order["identifier"]]

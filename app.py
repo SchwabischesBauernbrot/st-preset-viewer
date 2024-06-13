@@ -216,7 +216,7 @@ def render_prompt(prompt, enabled=True):
             if prompt["identifier"] in builtin_prompt_ids:
                 gr.Markdown(f"This is a system prompt ({prompt['identifier']})")
             if prompt["content"]:
-                gr.Textbox(prompt["content"], container=False, interactive=False)
+                gr.Textbox(prompt["content"], container=False, interactive=False, max_lines=9999)
 
 with gr.Blocks() as demo:
     preset = gr.State(None)

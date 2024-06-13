@@ -10,14 +10,17 @@ class Validator:
         self.valid = True
         self.obj = obj
 
-    def validate_key(self, key, ty):
+    def try_validate_key(self, key, ty):
         if key not in self.obj:
-            self.valid = False
             return False
         if not isinstance(self.obj[key], ty):
-            self.valid = False
             return False
         return True
+    
+    def validate_key(self, key, ty):
+        r = self.try_validate_key(self, key, ty)
+        self.valid = r
+        return r
     
     def validate_key_if_present(self, key, ty):
         if key in self.obj and not isinstance(self.obj[key], ty):
@@ -47,9 +50,13 @@ class Validator:
     def validate_prompt_order(self):
         self.validate_key("character_id", str)
         if self.validate_key("order", list):
-            for s in self.obj["order"]:
-                if not Validator.is_valid_ordering(s):
-                    self.valid = False
+            if not Validator.is_valid_prompt_order_list(self.obj["order"]):
+                self.valid = False
+
+    def validate_prompt_order_list(self):
+        for s in self.obj["order"]:
+            if not Validator.is_valid_ordering(s):
+                self.valid = False
 
     def validate_ordering(self):
         self.validate_key("identifier", str)
@@ -94,9 +101,15 @@ class Validator:
                     continue
                 known_prompt_ids.add(prompt["identifier"])
         seen_cid0 = False
-        if self.validate_key("prompt_order", list):
+        if self.try_validate_key("prompt_order", list):
             for order in self.obj["prompt_order"]:
                 if Validator.is_valid_prompt_order(order) and order["character_id"] == "100000" and all(lambda o: o["identifier"] in known_prompt_ids for o in order["order"]):
+                    seen_cid0 = True
+        elif self.validate_key("prompt_order", dict):
+            if not Validator.is_valid_prompt_order_list(self.obj["prompt_order"]):
+                self.valid = False
+            else:
+                if all(lambda o: o["identifier"] in known_prompt_ids for o in self.obj["prompt_order"]):
                     seen_cid0 = True
         if not seen_cid0:
             self.valid = False
@@ -117,6 +130,12 @@ class Validator:
     def is_valid_prompt_order(cls, prompt_order):
         v = cls(prompt_order)
         v.validate_prompt_order()
+        return v.valid
+
+    @classmethod
+    def is_valid_prompt_order_list(cls, prompt_order_list):
+        v = cls(prompt_order_list)
+        v.validate_prompt_order_list()
         return v.valid
 
     @classmethod
@@ -186,7 +205,7 @@ with gr.Blocks() as demo:
                     gr.Markdown("Preset loaded and validated")
                     prompt_map = {p["identifier"]: p for p in preset["prompts"]}
                     gr.Markdown("# Preset")
-                    for order in next(o for o in preset["prompt_order"] if o["character_id"] == "100000")["order"]:
+                    for order in (next(o for o in preset["prompt_order"] if o["character_id"] == "100000")["order"] if isinstance(preset["prompt_order"], list) else preset["prompt_order"]):
                         prompt = prompt_map[order["identifier"]]
                         render_prompt(prompt, order["enabled"])
                     with gr.Accordion("# All prompts", open=False):

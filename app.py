@@ -53,7 +53,7 @@ class Validator:
             self.validate_key_if_present(k, ty)
 
     def validate_prompt(self):
-        self.validate_key("identifier", bool)
+        self.validate_key("identifier", str)
         self.validate_key("name", str)
         self.validate_keys_if_present([
             "injection_position",
@@ -126,11 +126,8 @@ class Validator:
         seen_cid0 = False
         if self.validate_key("prompt_order", list) and len(self.obj["prompt_order"]) > 0 and isinstance(self.obj["prompt_order"][0], dict):
             for order in self.obj["prompt_order"]:
-                # FIXME: the identifier check doesn't work?
-                if Validator.is_valid_prompt_order(order) and order["character_id"] == 100001: #and all(o["identifier"] in known_prompt_ids for o in order["order"]):
+                if Validator.is_valid_prompt_order(order) and order["character_id"] == 100001 and all(o["identifier"] in known_prompt_ids for o in order["order"]):
                     seen_cid0 = True
-            # if Validator.is_valid_prompt_order_list(self.obj["prompt_order"]) and all(lambda o: o["identifier"] in known_prompt_ids for o in self.obj["prompt_order"]):
-            #     seen_cid0 = True
         if not seen_cid0:
             self.valid = False
 
@@ -218,7 +215,6 @@ def render_prompt(prompt, enabled=True):
             gr.Code(prompt["content"], container=False)
 
 with gr.Blocks() as demo:
-    # preset_error = gr.State(False)
     preset = gr.State(None)
     load_extra = gr.State(None)
     

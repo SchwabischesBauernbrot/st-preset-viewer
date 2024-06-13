@@ -15,6 +15,7 @@ builtin_pairs = [
     ("Persona Description", "personaDescription"),
     ("JB", "jailbreak"),
     ("NSFW", "nsfw"),
+    ("Main Prompt", "main"),
 ]
 builtin_prompts = [{
     "name": x[0],

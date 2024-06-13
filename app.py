@@ -214,7 +214,7 @@ def render_prompt(prompt, enabled=True):
             if "injection_position" in prompt and prompt["injection_position"] == 1 and "injection_depth" in prompt:
                 gr.Markdown(f"Injection depth: {prompt['injection_depth']} (absolute)")
             if prompt["identifier"] in builtin_prompt_ids:
-                gr.Markdown(f"This is a system prompt ({prompt['identifier'})")
+                gr.Markdown(f"This is a system prompt ({prompt['identifier']})")
             if prompt["content"].strip():
                 gr.Code(prompt["content"], container=False, interactive=False)
 

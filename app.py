@@ -18,7 +18,7 @@ class Validator:
         return True
     
     def validate_key(self, key, ty):
-        r = self.try_validate_key(self, key, ty)
+        r = self.try_validate_key(key, ty)
         self.valid = r
         return r
     

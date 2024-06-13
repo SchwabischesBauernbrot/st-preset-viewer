@@ -103,11 +103,10 @@ class Validator:
                 known_prompt_ids.add(prompt["identifier"])
         seen_cid0 = False
         if self.validate_key("prompt_order", list) and len(self.obj["prompt_order"]) > 0 and isinstance(self.obj["prompt_order"][0], dict):
-            if "character_id" in self.obj["prompt_order"][0]:
-                for order in self.obj["prompt_order"]:
-                    if Validator.is_valid_prompt_order(order) and order["character_id"] == 100001 and all(lambda o: o["identifier"] in known_prompt_ids for o in order["order"]):
-                        seen_cid0 = True
-            elif Validator.is_valid_prompt_order_list(self.obj["prompt_order"]) and all(lambda o: o["identifier"] in known_prompt_ids for o in self.obj["prompt_order"]):
+            for order in self.obj["prompt_order"]:
+                if Validator.is_valid_prompt_order(order) and order["character_id"] == 100001 and all(lambda o: o["identifier"] in known_prompt_ids for o in order["order"]):
+                    seen_cid0 = True
+            if Validator.is_valid_prompt_order_list(self.obj["prompt_order"]) and all(lambda o: o["identifier"] in known_prompt_ids for o in self.obj["prompt_order"]):
                 seen_cid0 = True
         if not seen_cid0:
             self.valid = False
